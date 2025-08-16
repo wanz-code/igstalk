@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Instagram Stalker - Wanz Official</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .popup {
+      transform: scale(0.8);
+      opacity: 0;
+      transition: all 0.3s ease-in-out;
+    }
+    .popup.active {
+      transform: scale(1);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
+  
+  <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-96 text-center">
+    <h1 class="text-2xl font-bold mb-4">🔍 Instagram Stalker</h1>
+    <input id="username" type="text" placeholder="Enter Instagram username"
+      class="w-full p-2 rounded-lg text-black mb-4">
+    <button onclick="stalkUser()"
+      class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-xl transition">Stalk</button>
+  </div>
+
+  <!-- popup -->
+  <div id="popup" class="fixed inset-0 flex items-center justify-center hidden bg-black/60">
+    <div class="popup bg-gray-800 p-6 rounded-2xl shadow-2xl max-w-md w-full">
+      <h2 id="popupName" class="text-xl font-bold mb-2"></h2>
+      <p id="popupDesc" class="mb-3 text-sm text-gray-300"></p>
+      <p><b>Followers:</b> <span id="popupFollowers"></span></p>
+      <p><b>Posts:</b> <span id="popupPosts"></span></p>
+      <p><b>Engagement:</b> <span id="popupEng"></span></p>
+      <div class="text-center mt-4">
+        <button onclick="closePopup()"
+          class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-8 text-gray-400 text-sm">© Wanz Official</footer>
+
+  <script>
+    async function stalkUser() {
+      const username = document.getElementById("username").value.trim()
+      if (!username) return
+
+      try {
+        const res = await fetch("/api/stalk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username })
+        })
+        const data = await res.json()
+        
+        if (data.result) {
+          document.getElementById("popupName").innerText = data.result.name
+          document.getElementById("popupDesc").innerText = data.result.description
+          document.getElementById("popupFollowers").innerText = data.result.followers
+          document.getElementById("popupPosts").innerText = data.result.uploads
+          document.getElementById("popupEng").innerText = data.result.engagementRate
+          openPopup()
+        } else {
+          alert("User tidak ditemukan")
+        }
+
+      } catch (e) {
+        console.error(e)
+        alert("Error: " + e.message)
+      }
+    }
+
+    function openPopup() {
+      const popup = document.getElementById("popup")
+      const box = popup.querySelector(".popup")
+      popup.classList.remove("hidden")
+      setTimeout(() => box.classList.add("active"), 10)
+    }
+
+    function closePopup() {
+      const popup = document.getElementById("popup")
+      const box = popup.querySelector(".popup")
+      box.classList.remove("active")
+      setTimeout(() => popup.classList.add("hidden"), 300)
+    }
+  </script>
+</body>
+</html>
