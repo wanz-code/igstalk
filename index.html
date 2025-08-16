@@ -2,89 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Instagram Stalker - Wanz Official</title>
+  <title>Instagram Stalker</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@tailwindcss/forms"></script>
   <style>
-    .popup {
-      transform: scale(0.8);
-      opacity: 0;
-      transition: all 0.3s ease-in-out;
+    body {
+      background: #fafafa;
+      font-family: 'Segoe UI', sans-serif;
     }
-    .popup.active {
-      transform: scale(1);
-      opacity: 1;
+    .popup {
+      animation: fadeIn 0.4s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
     }
   </style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
-  
-  <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-96 text-center">
-    <h1 class="text-2xl font-bold mb-4">🔍 Instagram Stalker</h1>
-    <input id="username" type="text" placeholder="Enter Instagram username"
-      class="w-full p-2 rounded-lg text-black mb-4">
-    <button onclick="stalkUser()"
-      class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-xl transition">Stalk</button>
+<body class="flex flex-col items-center justify-center min-h-screen">
+
+  <div class="w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+    <h1 class="text-2xl font-bold text-center mb-4">Instagram Stalker</h1>
+    <form id="stalkForm" class="space-y-4">
+      <input type="text" id="username" name="username" placeholder="Masukkan Username"
+        class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300" required>
+      <button type="submit"
+        class="w-full py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg font-semibold hover:opacity-90 transition">
+        Stalk
+      </button>
+    </form>
   </div>
 
-  <!-- popup -->
-  <div id="popup" class="fixed inset-0 flex items-center justify-center hidden bg-black/60">
-    <div class="popup bg-gray-800 p-6 rounded-2xl shadow-2xl max-w-md w-full">
-      <h2 id="popupName" class="text-xl font-bold mb-2"></h2>
-      <p id="popupDesc" class="mb-3 text-sm text-gray-300"></p>
-      <p><b>Followers:</b> <span id="popupFollowers"></span></p>
-      <p><b>Posts:</b> <span id="popupPosts"></span></p>
-      <p><b>Engagement:</b> <span id="popupEng"></span></p>
-      <div class="text-center mt-4">
-        <button onclick="closePopup()"
-          class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl">Close</button>
-      </div>
+  <!-- Popup -->
+  <div id="popup" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="popup bg-white p-6 rounded-2xl shadow-xl w-11/12 max-w-lg">
+      <h2 class="text-xl font-bold mb-4">Hasil Stalk</h2>
+      <div id="result" class="space-y-2 text-sm"></div>
+      <button onclick="closePopup()"
+        class="mt-4 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700">Tutup</button>
     </div>
   </div>
 
-  <footer class="mt-8 text-gray-400 text-sm">© Wanz Official</footer>
+  <footer class="mt-6 text-gray-500 text-sm">
+    © Wanz Official
+  </footer>
 
   <script>
-    async function stalkUser() {
+    const form = document.getElementById("stalkForm")
+    const popup = document.getElementById("popup")
+    const resultDiv = document.getElementById("result")
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault()
       const username = document.getElementById("username").value.trim()
-      if (!username) return
 
-      try {
-        const res = await fetch("/api/stalk", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username })
-        })
-        const data = await res.json()
-        
-        if (data.result) {
-          document.getElementById("popupName").innerText = data.result.name
-          document.getElementById("popupDesc").innerText = data.result.description
-          document.getElementById("popupFollowers").innerText = data.result.followers
-          document.getElementById("popupPosts").innerText = data.result.uploads
-          document.getElementById("popupEng").innerText = data.result.engagementRate
-          openPopup()
-        } else {
-          alert("User tidak ditemukan")
-        }
+      const res = await fetch("/stalk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      })
+      const data = await res.json()
 
-      } catch (e) {
-        console.error(e)
-        alert("Error: " + e.message)
+      if (data.status === 200) {
+        resultDiv.innerHTML = `
+          <p><b>Username:</b> ${data.result.name}</p>
+          <p><b>Bio:</b> ${data.result.description}</p>
+          <p><b>Followers:</b> ${data.result.followers}</p>
+          <p><b>Uploads:</b> ${data.result.uploads}</p>
+          <p><b>Engagement Rate:</b> ${data.result.engagementRate}</p>
+          <p><b>Popular Post:</b> <a href="${data.result.mostLikedPosts[0]?.link}" target="_blank" class="text-blue-500 underline">Klik di sini</a></p>
+        `
+      } else {
+        resultDiv.innerHTML = `<p class="text-red-500 font-semibold">❌ ${data.error || "User tidak ditemukan"}</p>`
       }
-    }
-
-    function openPopup() {
-      const popup = document.getElementById("popup")
-      const box = popup.querySelector(".popup")
       popup.classList.remove("hidden")
-      setTimeout(() => box.classList.add("active"), 10)
-    }
+    })
 
     function closePopup() {
-      const popup = document.getElementById("popup")
-      const box = popup.querySelector(".popup")
-      box.classList.remove("active")
-      setTimeout(() => popup.classList.add("hidden"), 300)
+      popup.classList.add("hidden")
     }
   </script>
 </body>
