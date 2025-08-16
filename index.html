@@ -6,149 +6,153 @@
   <title>Instagram Stalker</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin:0;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4);
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      flex-direction:column;
-      color:white;
     }
-    .card {
-      background:#fff;
-      color:#333;
-      border-radius:20px;
-      padding:20px;
-      width:90%;
-      max-width:450px;
-      box-shadow:0 8px 25px rgba(0,0,0,0.3);
-      text-align:center;
-      position:relative;
-      animation: fadeIn 0.8s ease-in-out;
-    }
-    @keyframes fadeIn {
-      from {opacity:0; transform:scale(0.9);}
-      to {opacity:1; transform:scale(1);}
-    }
-    .logo {
-      width:60px;
-      margin-bottom:10px;
-    }
-    input {
-      width:100%;
-      padding:10px;
-      border:2px solid #ddd;
-      border-radius:12px;
-      margin:10px 0;
-      font-size:16px;
-    }
-    button {
-      background:#dd2a7b;
-      color:white;
-      border:none;
-      padding:12px 20px;
-      border-radius:12px;
-      font-size:16px;
-      font-weight:600;
-      cursor:pointer;
-      transition:0.3s;
-    }
-    button:hover { background:#f58529; }
-    .result {
-      margin-top:20px;
-      text-align:left;
-    }
-    .popup {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
+
+    body {
+      background: #fafafa;
       display: flex;
       justify-content: center;
       align-items: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: 0.3s;
+      flex-direction: column;
+      min-height: 100vh;
     }
-    .popup.active {
-      visibility: visible;
-      opacity: 1;
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #262626;
     }
-    .popup-content {
+
+    .card {
       background: #fff;
-      color:#333;
-      padding: 20px;
-      border-radius: 15px;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
       text-align: center;
-      max-width: 300px;
-      animation: pop 0.4s ease-in-out;
     }
-    @keyframes pop {
-      from {transform:scale(0.7);}
-      to {transform:scale(1);}
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #dbdbdb;
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    button {
+      background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+      color: #fff;
+      padding: 12px;
+      border: none;
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      transition: transform 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+    }
+
+    .profile {
+      margin-top: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    .profile img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #ddd;
+      margin-bottom: 15px;
+    }
+
+    .popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #262626;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.4s ease;
+      z-index: 999;
+    }
+
+    .popup.show {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 </head>
 <body>
+  <h1>🔍 Instagram Stalker</h1>
   <div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" class="logo" alt="Instagram">
-    <h2>Instagram Stalker</h2>
-    <input id="username" type="text" placeholder="Masukkan username Instagram">
-    <button onclick="stalk()">Cari</button>
-    <div class="result" id="result"></div>
+    <input type="text" id="username" placeholder="Masukkan Username Instagram...">
+    <button onclick="getProfile()">Cari</button>
+
+    <div class="profile" id="profile"></div>
   </div>
 
-  <div class="popup" id="popup">
-    <div class="popup-content" id="popupContent"></div>
-  </div>
+  <div class="popup" id="popup"></div>
 
   <script>
-    async function stalk() {
+    function showPopup(message) {
+      const popup = document.getElementById('popup')
+      popup.textContent = message
+      popup.classList.add('show')
+      setTimeout(() => popup.classList.remove('show'), 3000)
+    }
+
+    async function getProfile() {
       const username = document.getElementById('username').value.trim()
-      const resultDiv = document.getElementById('result')
+      const profileDiv = document.getElementById('profile')
+
       if (!username) {
-        showPopup("⚠️ Masukkan username dulu bro")
+        showPopup("❌ Username wajib diisi")
         return
       }
 
       try {
-        const res = await fetch(`https://fastrestapis.fasturl.cloud/stalk/instagram?username=${username}`)
-        if (!res.ok) throw new Error("Gagal fetch API")
+        profileDiv.style.display = 'none'
+        profileDiv.innerHTML = ''
+
+        const res = await fetch(`/api/stalk?username=${username}`)
         const data = await res.json()
 
-        if (data.status !== 200) {
-          showPopup("❌ Username tidak ditemukan")
+        if (data.error) {
+          showPopup("⚠️ " + data.error)
           return
         }
 
-        const r = data.result
-        resultDiv.innerHTML = `
-          <h3>@${r.name}</h3>
-          <p>${r.description || 'Tidak ada bio'}</p>
-          <p><b>Followers:</b> ${r.followers}</p>
-          <p><b>Uploads:</b> ${r.uploads}</p>
-          <p><b>Engagement Rate:</b> ${r.engagementRate}</p>
-          <p><b>Post per Hari:</b> ${r.postsPerDay}</p>
-          <p><b>Post per Minggu:</b> ${r.postsPerWeek}</p>
-          <p><b>Post per Bulan:</b> ${r.postsPerMonth}</p>
-          <p><b>Most Popular Time:</b> ${r.mostPopularPostTime}</p>
-          <p><b>Hashtags:</b> ${r.hashtags.join(', ')}</p>
-          <p><b>Most Liked Post:</b> <a href="${r.mostLikedPosts[0]?.link}" target="_blank">Klik Disini</a> ❤️ ${r.mostLikedPosts[0]?.likes}</p>
+        profileDiv.innerHTML = `
+          <img src="${data.profile_pic}" alt="Profile Picture">
+          <h2>${data.username} ${data.verified ? "✅" : ""}</h2>
+          <p><strong>Nama:</strong> ${data.full_name || "-"}</p>
+          <p><strong>Bio:</strong> ${data.biography || "-"}</p>
+          <p><strong>Followers:</strong> ${data.followers}</p>
+          <p><strong>Following:</strong> ${data.following}</p>
+          <p><strong>Postingan:</strong> ${data.posts}</p>
         `
-      } catch (err) {
-        showPopup("🚨 Terjadi kesalahan koneksi")
-      }
-    }
+        profileDiv.style.display = 'block'
 
-    function showPopup(message) {
-      const popup = document.getElementById('popup')
-      const content = document.getElementById('popupContent')
-      content.innerHTML = message
-      popup.classList.add('active')
-      popup.onclick = () => popup.classList.remove('active')
+      } catch (err) {
+        showPopup("🚫 Gagal koneksi server")
+      }
     }
   </script>
 </body>
