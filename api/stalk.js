@@ -1,19 +1,16 @@
-// /api/stalk.js
 export default async function handler(req, res) {
-  const { username } = req.query
+  const { username } = req.query;
 
   if (!username) {
-    return res.status(400).json({ error: "Username wajib diisi" })
+    return res.status(400).json({ status: 400, message: "Username required" });
   }
 
   try {
-    const response = await fetch(
-      `https://fastrestapis.fasturl.cloud/stalk/instagram?username=${username}`
-    )
+    const fetchRes = await fetch(`https://fastrestapis.fasturl.cloud/stalk/instagram?username=${username}`);
+    const data = await fetchRes.json();
 
-    const data = await response.json()
-    res.status(200).json(data)
-  } catch (err) {
-    res.status(500).json({ error: "Gagal fetch API", detail: err.message })
+    res.status(200).json(data);
+  } catch (e) {
+    res.status(500).json({ status: 500, message: "Internal Server Error" });
   }
-                          }
+      }
