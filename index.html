@@ -3,157 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instagram Stalker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    body {
-      background: #fafafa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
-      color: #262626;
-    }
-
-    .card {
-      background: #fff;
-      padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 420px;
-      text-align: center;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #dbdbdb;
-      border-radius: 10px;
-      outline: none;
-      font-size: 14px;
-    }
-
-    button {
-      background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
-      color: #fff;
-      padding: 12px;
-      border: none;
-      width: 100%;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 15px;
-      transition: transform 0.2s ease;
-    }
-
-    button:hover {
-      transform: scale(1.03);
-    }
-
-    .profile {
-      margin-top: 20px;
-      text-align: center;
-      display: none;
-    }
-
-    .profile img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: 3px solid #ddd;
-      margin-bottom: 15px;
-    }
-
-    .popup {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #262626;
-      color: #fff;
-      padding: 12px 18px;
-      border-radius: 12px;
-      opacity: 0;
-      transform: translateY(-20px);
-      transition: all 0.4s ease;
-      z-index: 999;
-    }
-
-    .popup.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  </style>
+  <title>Instagram Stalker - Wanz Official</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>🔍 Instagram Stalker</h1>
-  <div class="card">
-    <input type="text" id="username" placeholder="Masukkan Username Instagram...">
-    <button onclick="getProfile()">Cari</button>
+  <div class="container">
+    <header>
+      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384063.png" alt="Instagram Logo" class="logo">
+      <h1>Instagram Stalker</h1>
+    </header>
 
-    <div class="profile" id="profile"></div>
+    <div class="search-box">
+      <input type="text" id="username" placeholder="Masukkan username Instagram...">
+      <button id="searchBtn">Cari</button>
+    </div>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p>Mengambil data...</p>
+    </div>
+
+    <div id="result" class="result hidden"></div>
+
+    <footer>
+      <p>© Wanz Official</p>
+    </footer>
   </div>
 
-  <div class="popup" id="popup"></div>
-
   <script>
-    function showPopup(message) {
-      const popup = document.getElementById('popup')
-      popup.textContent = message
-      popup.classList.add('show')
-      setTimeout(() => popup.classList.remove('show'), 3000)
-    }
+    const searchBtn = document.getElementById("searchBtn");
+    const usernameInput = document.getElementById("username");
+    const resultDiv = document.getElementById("result");
+    const loadingDiv = document.getElementById("loading");
 
-    async function getProfile() {
-      const username = document.getElementById('username').value.trim()
-      const profileDiv = document.getElementById('profile')
+    searchBtn.addEventListener("click", async () => {
+      const username = usernameInput.value.trim();
+      if (!username) return;
 
-      if (!username) {
-        showPopup("❌ Username wajib diisi")
-        return
-      }
+      resultDiv.classList.add("hidden");
+      loadingDiv.classList.remove("hidden");
 
       try {
-        profileDiv.style.display = 'none'
-        profileDiv.innerHTML = ''
+        const res = await fetch(`/api/stalk.js?username=${username}`);
+        const data = await res.json();
 
-        const res = await fetch(`/api/stalk?username=${username}`)
-        const data = await res.json()
+        loadingDiv.classList.add("hidden");
 
-        if (data.error) {
-          showPopup("⚠️ " + data.error)
-          return
+        if (data.status !== 200) {
+          resultDiv.innerHTML = `<div class="card error">❌ User tidak ditemukan!</div>`;
+          resultDiv.classList.remove("hidden");
+          return;
         }
 
-        profileDiv.innerHTML = `
-          <img src="${data.profile_pic}" alt="Profile Picture">
-          <h2>${data.username} ${data.verified ? "✅" : ""}</h2>
-          <p><strong>Nama:</strong> ${data.full_name || "-"}</p>
-          <p><strong>Bio:</strong> ${data.biography || "-"}</p>
-          <p><strong>Followers:</strong> ${data.followers}</p>
-          <p><strong>Following:</strong> ${data.following}</p>
-          <p><strong>Postingan:</strong> ${data.posts}</p>
-        `
-        profileDiv.style.display = 'block'
+        const r = data.result;
+
+        resultDiv.innerHTML = `
+          <div class="card">
+            <h2>@${r.name}</h2>
+            <p>${r.description || "Tidak ada bio"}</p>
+            <div class="stats">
+              <div><b>Followers:</b> ${r.followers}</div>
+              <div><b>Uploads:</b> ${r.uploads}</div>
+              <div><b>Engagement Rate:</b> ${r.engagementRate}</div>
+              <div><b>Posts/Day:</b> ${r.postsPerDay}</div>
+              <div><b>Posts/Week:</b> ${r.postsPerWeek}</div>
+              <div><b>Posts/Month:</b> ${r.postsPerMonth}</div>
+              <div><b>Most Popular Time:</b> ${r.mostPopularPostTime}</div>
+            </div>
+            <h3>Hashtags</h3>
+            <p>${(r.hashtags || []).join(", ") || "-"}</p>
+            <h3>Most Liked Post</h3>
+            ${
+              r.mostLikedPosts?.length
+                ? `<a href="${r.mostLikedPosts[0].link}" target="_blank">
+                    ❤️ ${r.mostLikedPosts[0].likes} | 💬 ${r.mostLikedPosts[0].comments}
+                  </a>`
+                : "-"
+            }
+          </div>
+        `;
+
+        resultDiv.classList.remove("hidden");
 
       } catch (err) {
-        showPopup("🚫 Gagal koneksi server")
+        loadingDiv.classList.add("hidden");
+        resultDiv.innerHTML = `<div class="card error">⚠️ Terjadi kesalahan koneksi!</div>`;
+        resultDiv.classList.remove("hidden");
       }
-    }
+    });
   </script>
 </body>
-</html>
+  </html>
